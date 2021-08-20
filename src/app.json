@@ -1,4 +1,11 @@
 {
-  "name": "react_native_app",
-  "displayName": "react_native_app"
+  "expo": {
+   "name": "react_native_app",
+   "version": "10",
+   "slug": "native-component-list",
+   "android": {
+     "package": "com.react_native_app",
+     "versionCode": 1
+   }
+  }
 }
