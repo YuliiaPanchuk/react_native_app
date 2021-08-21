@@ -11,9 +11,16 @@ import {SafeAreaView, View, Text, Alert} from 'react-native';
 import Login from './components/Login';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import List from './components/List';
+import Detail from './components/Detail';
+import New from './components/New';
 
 const App: () => React$Node = () => {
   const [token, setToken] = useState('');
+
+  const [view, setView] = useState('main'); //views: main, new, detail
+  const [item, setItem] = useState({});
+
+  <List items={items} setView={setView} setItem={setItem} />;
 
   const storeData = async value => {
     try {
@@ -84,10 +91,44 @@ const App: () => React$Node = () => {
       });
   };
 
+  const addItem = (title, price, description) => {
+    fetch('https://f0cf-80-217-151-211.ngrok.io/new', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title,
+        price,
+        description,
+      }),
+    })
+      .then(response => response.json())
+      .then(json => {
+        if (json.success) {
+          setItems(json.items);
+          setView('list');
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
   return (
     <>
       <SafeAreaView>
-        {token === null ? <Login doLogin={doLogin} /> : <List items={items} />}
+        {view === 'new' ? (
+          <New addItem={addItem} setView={setView} />
+        ) : view === 'detail' ? (
+          <Detail item={item} setView={setView} />
+        ) : token ? (
+          <List items={items} setView={setView} setItem={setItem} />
+        ) : (
+          <Login doLogin={doLogin} />
+        )}
       </SafeAreaView>
     </>
   );
