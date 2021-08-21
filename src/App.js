@@ -7,12 +7,57 @@
  */
 
 import React, {useState, useEffect} from 'react';
-import { SafeAreaView, View, Text, Alert } from 'react-native';
+import {SafeAreaView, View, Text, Alert} from 'react-native';
 import Login from './components/Login';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import List from './components/List';
 
 const App: () => React$Node = () => {
   const [token, setToken] = useState('');
+
+  const storeData = async value => {
+    try {
+      await AsyncStorage.setItem('@jwt', value);
+    } catch (e) {
+      Alert.alert('Error while storing data!');
+    }
+  };
+
+  useEffect(() => {
+    getData();
+  }, []);
+
+  const [items, setItems] = useState([]);
+
+  const getData = async () => {
+    try {
+      const _token = await AsyncStorage.getItem('@jwt');
+      setToken(_token);
+      console.log(token);
+      if (_token !== null) {
+        fetch('https://f0cf-80-217-151-211.ngrok.io/items', {
+          method: 'GET',
+          headers: {
+            authorization: `Bearer ${_token}`,
+          },
+        })
+          .then(response => response.json())
+          .then(json => {
+            if (json.success) {
+              json.items.map(item => (item.key = item.id + ''));
+              setItems(json.items);
+            } else {
+              setToken(null);
+            }
+          })
+          .catch(error => {
+            setToken(null);
+          });
+      }
+    } catch (e) {
+      // error reading value
+    }
+  };
 
   const doLogin = (email, password) => {
     // fetch('http://localhost:3010/login', {
@@ -30,7 +75,6 @@ const App: () => React$Node = () => {
       .then(response => response.json())
       .then(json => {
         if (json.success) {
-          // Alert.alert(json.token)
           setToken(json.token);
           storeData(json.token);
         }
@@ -39,19 +83,11 @@ const App: () => React$Node = () => {
         console.log(error);
       });
   };
-  
-  const storeData = async (value) => {
-    try {
-      await AsyncStorage.setItem('@jwt', value)
-    } catch (e) {
-      Alert.alert('Error while storing data!')
-    }
-  }
 
   return (
     <>
       <SafeAreaView>
-        <Login doLogin={doLogin} />
+        {token === null ? <Login doLogin={doLogin} /> : <List items={items} />}
       </SafeAreaView>
     </>
   );

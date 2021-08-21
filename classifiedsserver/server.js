@@ -10,34 +10,57 @@ app.use(express.json());
 const SECRET_KEY = "secret!";
 
 app.post("/login", async (req, res) => {
-    const { email,password } = req.body
-    const theUser = users.find((user) => user.email === email)
+  const { email, password } = req.body;
+  const theUser = users.find((user) => user.email === email);
 
-    if (!theUser) {
-      res.status(404).send({
-            success: false,
-            message: 'Could not find the account: ${email}'
-        })
-        return
-    }
+  if (!theUser) {
+    res.status(404).send({
+      success: false,
+      message: "Could not find the account: ${email}",
+    });
+    return;
+  }
 
-    const match = await bcrypt.compare(password, theUser.password)
-    if (!match) {
-        // return error to user to let them know the password is incorrect
-        res.status(401).send({
-            success: false,
-            message: "Incorrect credentials",
-        })
-        return
-    }
+  const match = await bcrypt.compare(password, theUser.password);
+  if (!match) {
+    // return error to user to let them know the password is incorrect
+    res.status(401).send({
+      success: false,
+      message: "Incorrect credentials",
+    });
+    return;
+  }
 
-    const token = jwt.sign({ email: theUser.email }, SECRET_KEY)
+  const token = jwt.sign({ email: theUser.email }, SECRET_KEY);
+
+  res.send({
+    success: true,
+    token: token,
+  });
+});
+
+app.get("/items", async (req, res) => {
+  const token = req.headers.authorization || "";
+
+  try {
+    const { email } = jwt.verify(token.split(" ")[1], SECRET_KEY);
+    const userid = users.filter((user) => user.email === email)[0].id;
 
     res.send({
-        success: true,
-        token: token,
-    })
-})
+      success: true,
+      items: items.map((item) => {
+        item.email = users.filter((user) => user.id === item.user)[0].email;
+        return item;
+      }),
+    });
+  } catch (e) {
+    console.log("Authentication token is invalid, please log in");
+    res.status(500).send({
+      success: false,
+      message: "Authentication token is invalid, please log in",
+    });
+  }
+});
 
 const users = [
   {
