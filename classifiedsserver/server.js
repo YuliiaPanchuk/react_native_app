@@ -2,17 +2,19 @@ const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
+
 const SECRET_KEY = "secret!";
 
-app.post("/login, async (req, res") => {
+app.post("/login", async (req, res) => {
     const { email,password } = req.body
-    const theUser = user.find((user) => user.email === email)
+    const theUser = users.find((user) => user.email === email)
 
     if (!theUser) {
-        resizeBy.status(404).send({
+      res.status(404).send({
             success: false,
             message: 'Could not find the account: ${email}'
         })
@@ -31,11 +33,11 @@ app.post("/login, async (req, res") => {
 
     const token = jwt.sign({ email: theUser.email }, SECRET_KEY)
 
-    resizeBy.send({
+    res.send({
         success: true,
         token: token,
     })
-}
+})
 
 const users = [
   {
